@@ -15,7 +15,7 @@ connectToMongo()
     app.use(
       cors({
         origin: ["https://syncro-frontend-tau.vercel.app"],
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true,
       }),
     ); // Allows your React app to talk to this server
