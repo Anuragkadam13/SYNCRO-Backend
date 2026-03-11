@@ -7,13 +7,14 @@ const taskRoutes = require("./routes/tasks.route");
 const connectToMongo = require("./config/db");
 const app = express();
 dotenv.config();
+const PORT = process.env.PORT || 5000;
 
 connectToMongo()
   .then(() => {
     app.use(express.json());
     app.use(
       cors({
-        origin: ["https://syncro-frontend-tau.vercel.app/"],
+        origin: ["https://syncro-frontend-tau.vercel.app"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
       }),
@@ -25,7 +26,8 @@ connectToMongo()
     app.use("/api/auth", authRoutes);
     app.use("/api/tasks", taskRoutes);
 
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`🚀 Server started on port ${PORT}`);
+    });
   })
   .catch((err) => console.error("Failed to connect to MongoDB:", err));
