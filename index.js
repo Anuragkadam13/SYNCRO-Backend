@@ -10,7 +10,13 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors()); // Allows your React app to talk to this server
+app.use(
+  cors({
+    origin: ["https://syncro-frontend-tau.vercel.app/"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  }),
+); // Allows your React app to talk to this server
 app.use(express.json()); // Allows server to read JSON data from requests
 app.use("/uploads", express.static("uploads")); // Makes uploaded proof files accessible
 
