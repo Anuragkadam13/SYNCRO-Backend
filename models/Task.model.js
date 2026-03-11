@@ -28,7 +28,11 @@ const taskSchema = new mongoose.Schema(
     },
 
     // For your "Proof" requirement later
-    proofFile: { type: String, default: null },
+    proofFile: {
+      data: Buffer,
+      contentType: String,
+      fileName: String,
+    },
   },
   { timestamps: true },
 );

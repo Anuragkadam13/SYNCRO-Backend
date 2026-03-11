@@ -93,9 +93,19 @@ router.patch("/accept/:taskId", async (req, res) => {
 router.patch("/complete/:taskId", upload.single("proof"), async (req, res) => {
   try {
     const task = await Task.findById(req.params.taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
     task.status = "completed";
-    task.proofFile = req.file ? req.file.path : null; // Save the file path
+
+    // Update: Handle the file using Memory Storage (buffer)
+    if (req.file) {
+      task.proofFile = {
+        data: req.file.buffer, // The actual PDF/Image data
+        contentType: req.file.mimetype, // e.g., 'application/pdf'
+        fileName: req.file.originalname,
+      };
+    }
+
     await task.save();
 
     // Logic: Decrement 'active' and increment 'completed'
@@ -103,9 +113,38 @@ router.patch("/complete/:taskId", upload.single("proof"), async (req, res) => {
       $inc: { "taskCounts.active": -1, "taskCounts.completed": 1 },
     });
 
-    res.json({ message: "Task Completed with Proof!", task });
+    res.json({
+      message: "Task Completed with Proof!",
+      task: { ...task._doc, proofFile: "File stored in DB" }, // Hide buffer in response for speed
+    });
   } catch (err) {
-    res.status(500).json({ message: "Completion failed" });
+    console.error("Vercel Upload Error:", err); // Very important for debugging logs!
+    res.status(500).json({ message: "Completion failed", error: err.message });
+  }
+});
+
+//Viewing proof File
+router.get("/view-proof/:taskId", async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.taskId);
+
+    if (!task || !task.proofFile || !task.proofFile.data) {
+      return res.status(404).json({ message: "Proof file not found" });
+    }
+
+    // 1. Tell the browser the correct file type (e.g., application/pdf or image/png)
+    res.set("Content-Type", task.proofFile.contentType);
+
+    // 2. Set the filename so when the user saves it, it has the original name
+    res.set(
+      "Content-Disposition",
+      `inline; filename="${task.proofFile.fileName}"`,
+    );
+
+    // 3. Send the raw binary buffer data
+    res.send(task.proofFile.data);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching file" });
   }
 });
 
