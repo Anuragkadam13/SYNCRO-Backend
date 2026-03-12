@@ -12,6 +12,17 @@ router.post("/register", async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
 
+    // 2. NEW: Check if someone is trying to register as a second Admin
+    if (role === "admin") {
+      const existingAdmin = await User.findOne({ role: "admin" });
+      if (existingAdmin) {
+        return res.status(400).json({
+          message:
+            "System already has an Administrator. You cannot create another Admin ID.",
+        });
+      }
+    }
+
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -21,6 +32,7 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({ message: "User created successfully!", user: user });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error during registration" });
   }
 });
